@@ -123,6 +123,9 @@ jobs:
         if: steps.check-main.outputs.needs_update == 'true'
         run: nix flake update zmx-src-main
 
+      - name: Refresh zig2nix dependency locks
+        if: steps.summary.outputs.needs_build == 'true'
+        run: scripts/update-zig-locks
 
       - name: Upload update candidate
         if: steps.summary.outputs.needs_build == 'true'
@@ -133,6 +136,8 @@ jobs:
           path: |
             flake.nix
             flake.lock
+            locks/zmx-release.zon2json-lock
+            locks/zmx-main.zon2json-lock
 
   build-linux:
     needs: prepare

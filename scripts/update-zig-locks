@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+archive=$(nix flake archive --json --no-write-lock-file)
+zig2nix_src=$(jq -r '.inputs.zig2nix.path' <<<"$archive")
+release_src=$(jq -r '.inputs["zmx-src"].path' <<<"$archive")
+main_src=$(jq -r '.inputs["zmx-src-main"].path' <<<"$archive")
+
+refresh_lock() {
+  local source_dir=$1
+  local destination=$2
+  local tmp_dir
+  tmp_dir=$(mktemp -d)
+
+  (
+    trap 'rm -rf "$tmp_dir"' EXIT
+
+    cp "$source_dir/build.zig.zon" "$tmp_dir/build.zig.zon"
+
+    if [[ -f "$destination" ]]; then
+      cp "$destination" "$tmp_dir/build.zig.zon2json-lock"
+    elif [[ -f "$source_dir/build.zig.zon2json-lock" ]]; then
+      cp "$source_dir/build.zig.zon2json-lock" "$tmp_dir/build.zig.zon2json-lock"
+    fi
+
+    # Dependency hashes are Zig-version-specific; match the compiler in flake.nix.
+    nix run "$zig2nix_src#zon2json-lock-0_15_2" -- "$tmp_dir/build.zig.zon"
+    cp "$tmp_dir/build.zig.zon2json-lock" "$destination"
+  )
+}
+
+mkdir -p locks
+refresh_lock "$release_src" locks/zmx-release.zon2json-lock
+
+if cmp -s "$release_src/build.zig.zon" "$main_src/build.zig.zon"; then
+  cp locks/zmx-release.zon2json-lock locks/zmx-main.zon2json-lock
+else
+  refresh_lock "$main_src" locks/zmx-main.zon2json-lock
+fi

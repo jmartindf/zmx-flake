@@ -12,5 +12,9 @@ fmt:
 lint:
     statix check .
 
+# Regenerate the zig2nix dependency locks for the pinned zmx sources
+update-zig-locks:
+    scripts/update-zig-locks
+
 # Format and lint
 check: fmt lint

@@ -4,6 +4,8 @@ Nix flake for [zmx](https://github.com/neurosnap/zmx).
 
 This repo builds zmx from source with [zig2nix](https://github.com/Cloudef/zig2nix). It exists because zmx is not in nixpkgs yet due to a [Zig compiler bug](https://codeberg.org/ziglang/zig/issues/30191).
 
+The zig2nix dependency locks are maintained in this repository and refreshed automatically with zmx updates. Builds therefore do not depend on upstream release tags containing an up-to-date generated lock.
+
 ## Packages
 
 - `zmx` — default package, pinned to the latest upstream tagged release

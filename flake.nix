@@ -4,7 +4,7 @@
   inputs = {
     zig2nix.url = "github:Cloudef/zig2nix";
     zmx-src = {
-      url = "github:neurosnap/zmx/v0.6.0";
+      url = "github:neurosnap/zmx/v0.7.0";
       flake = false;
     };
     zmx-src-main = {
@@ -114,11 +114,11 @@
           );
 
           mkZmx =
-            src: packageAttrs:
+            src: zigBuildZonLock: packageAttrs:
             let
               unwrapped = env.package (
                 {
-                  inherit src;
+                  inherit src zigBuildZonLock;
                   zigBuildFlags = [ "-Doptimize=ReleaseSafe" ];
                   zigPreferMusl = pkgs.stdenv.hostPlatform.isLinux;
                 }
@@ -148,8 +148,8 @@
                 installShellCompletion --fish zmx.fish
               '';
 
-          zmx = mkZmx zmx-src { };
-          zmx-main = mkZmx zmx-src-main {
+          zmx = mkZmx zmx-src ./locks/zmx-release.zon2json-lock { };
+          zmx-main = mkZmx zmx-src-main ./locks/zmx-main.zon2json-lock {
             pname = "zmx-main";
             version = shortRev zmx-src-main.rev;
           };
